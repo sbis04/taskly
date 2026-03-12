@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 void main() => runApp(const TasklyApp());
 
@@ -29,8 +30,9 @@ class Task {
   String title;
   bool isDone;
   final DateTime createdAt;
+  DateTime? reminderDateTime; // Added field for reminder
 
-  Task({required this.title, this.isDone = false})
+  Task({required this.title, this.isDone = false, this.reminderDateTime})
       : createdAt = DateTime.now();
 }
 
@@ -72,6 +74,35 @@ class _TaskListScreenState extends State<TaskListScreen> {
           ),
         ),
       );
+  }
+
+  Future<void> _pickReminderDateTime(int index) async {
+    final initialDate = _tasks[index].reminderDateTime ?? DateTime.now();
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365 * 5)), // 5 years from now
+    );
+
+    if (pickedDate == null) return; // User canceled date picker
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initialDate),
+    );
+
+    if (pickedTime == null) return; // User canceled time picker
+
+    setState(() {
+      _tasks[index].reminderDateTime = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        pickedTime.hour,
+        pickedTime.minute,
+      );
+    });
   }
 
   void _showAddSheet() {
@@ -212,6 +243,21 @@ class _TaskListScreenState extends State<TaskListScreen> {
                       color: theme.colorScheme.outline,
                     )
                   : null,
+            ),
+            subtitle: task.reminderDateTime != null
+                ? Text(
+                    'Reminder: ${DateFormat('MMM d, yyyy HH:mm').format(task.reminderDateTime!)}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
+                  )
+                : null,
+            trailing: IconButton(
+              icon: Icon(
+                task.reminderDateTime != null ? Icons.alarm_on : Icons.alarm_add,
+                color: task.reminderDateTime != null ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+              ),
+              onPressed: () => _pickReminderDateTime(index),
             ),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
