@@ -99,7 +99,7 @@ void main() async {
   print('Creating pull request...');
   final prBody = '''## Ghost Maintainer Fix
 
-Automated fix for #$issueNumber: $issueTitle
+Fixes #$issueNumber
 
 ### What changed
 ${changedFiles.map((f) => '- `$f`').join('\n')}
