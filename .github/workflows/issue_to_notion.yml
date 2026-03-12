@@ -23,30 +23,36 @@ jobs:
         working-directory: notion_setup
         run: dart pub get
 
-      - name: "Step 1: Ingest issue to Notion"
+      - name: "Step 1: Ingest issue to Triage Queue"
         working-directory: notion_setup
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          NOTION_TRIAGE_DB_ID: ${{ secrets.NOTION_TRIAGE_DB_ID }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
           ISSUE_URL: ${{ github.event.issue.html_url }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: dart run bin/issue_ingestion.dart
 
-      - name: "Step 2: Auto-triage with AI"
+      - name: "Step 2: Auto-triage and route"
+        id: triage
         working-directory: notion_setup
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_TRIAGE_DB_ID: ${{ secrets.NOTION_TRIAGE_DB_ID }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          NOTION_FEATURE_DB_ID: ${{ secrets.NOTION_FEATURE_DB_ID }}
           NOTION_VISION_PAGE_ID: ${{ secrets.NOTION_VISION_PAGE_ID }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
-        run: dart run bin/auto_triage.dart
+        run: |
+          dart run bin/auto_triage.dart
+          echo "Triage step completed"
 
-      - name: "Step 3: Investigate and propose fix"
+      - name: "Step 3: Investigate bug and propose fix"
+        if: steps.triage.outputs.issue_type == 'bug'
         working-directory: notion_setup
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
@@ -59,7 +65,8 @@ jobs:
           GITHUB_WORKSPACE: ${{ github.workspace }}
         run: dart run bin/auto_investigate.dart
 
-      - name: "Step 4: Create branch and PR"
+      - name: "Step 4: Create branch and PR for bug fix"
+        if: steps.triage.outputs.issue_type == 'bug'
         working-directory: notion_setup
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
