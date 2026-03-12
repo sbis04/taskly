@@ -58,7 +58,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
     setState(() => _tasks[index].isDone = !_tasks[index].isDone);
   }
 
-  void _deleteTask(int index) {
+  // Renamed from _deleteTask to _performDeleteTask as it's the actual deletion logic
+  void _performDeleteTask(int index) {
     final removed = _tasks[index];
     setState(() => _tasks.removeAt(index));
     ScaffoldMessenger.of(context)
@@ -197,7 +198,30 @@ class _TaskListScreenState extends State<TaskListScreen> {
             color: theme.colorScheme.error,
             child: Icon(Icons.delete_outline, color: theme.colorScheme.onError),
           ),
-          onDismissed: (_) => _deleteTask(index),
+          confirmDismiss: (direction) async {
+            final bool confirm = await showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text("Confirm Deletion"),
+                  content: Text("Are you sure you want to delete \"${task.title}\"? You can undo this action immediately after deletion."),
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false), // Cancel
+                      child: const Text("Cancel"),
+                    ),
+                    FilledButton( // Use FilledButton for destructive action
+                      onPressed: () => Navigator.of(context).pop(true), // Confirm
+                      style: FilledButton.styleFrom(backgroundColor: theme.colorScheme.error),
+                      child: const Text("Delete"),
+                    ),
+                  ],
+                );
+              },
+            );
+            return confirm;
+          },
+          onDismissed: (_) => _performDeleteTask(index), // Call the actual deletion function here
           child: ListTile(
             leading: Checkbox(
               value: task.isDone,
