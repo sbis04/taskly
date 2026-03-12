@@ -1,0 +1,11 @@
+name: notion_setup
+description: Setup scripts for Ghost Maintainer Notion database and GitHub Actions
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  http: ^1.3.0
+  args: ^2.6.0
