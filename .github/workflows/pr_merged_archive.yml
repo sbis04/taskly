@@ -1,0 +1,32 @@
+name: PR Merged Archive
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  archive-in-notion:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Install dependencies
+        working-directory: notion_setup
+        run: dart pub get
+
+      - name: Archive merged PR in Notion
+        working-directory: notion_setup
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: dart run bin/archive_merged.dart
