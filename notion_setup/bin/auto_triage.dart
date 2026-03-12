@@ -170,8 +170,14 @@ Priority guidelines:
   final typeConfidence = (triage['type_confidence'] as num?)?.toInt() ?? 50;
   final priority = triage['priority'] as String? ?? 'P2-Medium';
   final labels = (triage['labels'] as List?)?.cast<String>() ?? ['Bug'];
-  final summary = triage['summary'] as String? ?? '';
-  final reasoning = triage['reasoning'] as String? ?? '';
+  final rawSummary = triage['summary'];
+  final summary = rawSummary is List
+      ? rawSummary.map((e) => '• $e').join('\n')
+      : (rawSummary as String? ?? '');
+  final rawReasoning = triage['reasoning'];
+  final reasoning = rawReasoning is List
+      ? rawReasoning.join('\n')
+      : (rawReasoning as String? ?? '');
 
   print('Triage: type=$issueType (confidence=$typeConfidence%), '
       'priority=$priority, labels=$labels');
