@@ -5,10 +5,12 @@ on:
     types: [opened]
 
 permissions:
+  contents: write
   issues: read
+  pull-requests: write
 
 jobs:
-  sync-to-notion:
+  ghost-maintainer:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,7 +23,7 @@ jobs:
         working-directory: notion_setup
         run: dart pub get
 
-      - name: Create Notion backlog entry
+      - name: "Step 1: Ingest issue to Notion"
         working-directory: notion_setup
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
@@ -32,7 +34,7 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: dart run bin/issue_ingestion.dart
 
-      - name: Auto-triage with AI
+      - name: "Step 2: Auto-triage with AI"
         working-directory: notion_setup
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
@@ -43,3 +45,28 @@ jobs:
           ISSUE_BODY: ${{ github.event.issue.body }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: dart run bin/auto_triage.dart
+
+      - name: "Step 3: Investigate and propose fix"
+        working-directory: notion_setup
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          NOTION_VISION_PAGE_ID: ${{ secrets.NOTION_VISION_PAGE_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+        run: dart run bin/auto_investigate.dart
+
+      - name: "Step 4: Create branch and PR"
+        working-directory: notion_setup
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+          TARGET_REPO: ${{ github.repository }}
+        run: dart run bin/auto_deploy.dart
