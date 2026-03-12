@@ -5,8 +5,9 @@ import 'package:http/http.dart' as http;
 
 import '../lib/notion_client.dart';
 
-/// Called by GitHub Action after triage to investigate the issue and propose a fix.
+/// Called by GitHub Action after triage routes a BUG to Maintenance Backlog.
 /// Reads source files from the local checkout, sends to Gemini, writes results to Notion.
+/// Only runs for bugs — features skip investigation and go straight to the backlog.
 ///
 /// Expects env vars: NOTION_TOKEN, NOTION_DATABASE_ID, NOTION_VISION_PAGE_ID,
 ///   GEMINI_API_KEY, ISSUE_TITLE, ISSUE_BODY, ISSUE_NUMBER, GITHUB_WORKSPACE
