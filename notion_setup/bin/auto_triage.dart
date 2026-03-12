@@ -280,6 +280,9 @@ Priority guidelines:
       stage: 'Triaged',
     );
     outputType = 'bug';
+    // Remove from Triage Queue
+    await client.updatePage(triagePageId, archived: true);
+    print('Removed from Triage Queue.');
   } else {
     // Confident feature → create in Feature Backlog
     print('Routing feature to Feature Backlog...');
@@ -296,6 +299,9 @@ Priority guidelines:
       stage: 'New',
     );
     outputType = 'feature';
+    // Remove from Triage Queue
+    await client.updatePage(triagePageId, archived: true);
+    print('Removed from Triage Queue.');
   }
 
   // 6. Write output for GitHub Actions
