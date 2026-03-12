@@ -27,6 +27,7 @@ jobs:
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          NOTION_ARCHIVE_DB_ID: ${{ secrets.NOTION_ARCHIVE_DB_ID }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: dart run bin/archive_merged.dart
