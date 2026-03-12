@@ -102,7 +102,7 @@ Analyze this issue and respond with ONLY a JSON object (no markdown, no code fen
   "type_confidence": 90,
   "priority": "P0-Critical" | "P1-High" | "P2-Medium" | "P3-Low",
   "labels": ["Bug" | "Feature" | "Docs" | "Performance" | "Security" | "Chore"],
-  "summary": "One paragraph summary of the issue and recommended action",
+  "summary": "1-3 bullet points (max 300 chars total). Keep it concise.",
   "reasoning": "Your detailed analysis of why you classified this as bug/feature and assigned this priority"
 }
 
@@ -196,8 +196,8 @@ Priority guidelines:
         'rich_text': [
           {
             'text': {
-              'content': summary.length > 2000
-                  ? '${summary.substring(0, 1997)}...'
+              'content': summary.length > 300
+                  ? '${summary.substring(0, 297)}...'
                   : summary
             }
           }
@@ -378,8 +378,8 @@ Future<void> _createInBacklog({
         'rich_text': [
           {
             'text': {
-              'content': summary.length > 2000
-                  ? '${summary.substring(0, 1997)}...'
+              'content': summary.length > 300
+                  ? '${summary.substring(0, 297)}...'
                   : summary
             }
           }
