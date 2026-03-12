@@ -2,27 +2,29 @@ import 'dart:io';
 
 import '../lib/notion_client.dart';
 
-/// Called by GitHub Action to create a Notion backlog entry from a new issue.
+/// Called by GitHub Action to create a Notion entry in the Triage Queue
+/// from a new GitHub issue. All issues land here first before being
+/// routed to the appropriate backlog (Bug → Maintenance, Feature → Feature).
 ///
-/// Expects env vars: NOTION_TOKEN, NOTION_DATABASE_ID,
+/// Expects env vars: NOTION_TOKEN, NOTION_TRIAGE_DB_ID,
 ///   ISSUE_TITLE, ISSUE_BODY, ISSUE_URL, ISSUE_NUMBER
 void main() async {
   final token = Platform.environment['NOTION_TOKEN'];
-  final databaseId = Platform.environment['NOTION_DATABASE_ID'];
+  final triageDbId = Platform.environment['NOTION_TRIAGE_DB_ID'];
   final issueTitle = Platform.environment['ISSUE_TITLE'] ?? 'Untitled Issue';
   final issueBody = Platform.environment['ISSUE_BODY'] ?? '';
   final issueUrl = Platform.environment['ISSUE_URL'] ?? '';
   final issueNumberStr = Platform.environment['ISSUE_NUMBER'] ?? '0';
 
-  if (token == null || databaseId == null) {
-    stderr.writeln('Required env vars: NOTION_TOKEN, NOTION_DATABASE_ID');
+  if (token == null || triageDbId == null) {
+    stderr.writeln('Required env vars: NOTION_TOKEN, NOTION_TRIAGE_DB_ID');
     exit(1);
   }
 
   final issueNumber = int.tryParse(issueNumberStr) ?? 0;
   final client = NotionClient(token: token);
 
-  print('Creating Notion backlog entry for issue #$issueNumber: $issueTitle');
+  print('Creating Triage Queue entry for issue #$issueNumber: $issueTitle');
 
   // Truncate body for Notion block (max 2000 chars per block)
   final bodyChunks = <Map<String, dynamic>>[];
@@ -63,7 +65,7 @@ void main() async {
   }
 
   await client.createDatabasePage(
-    databaseId: databaseId,
+    databaseId: triageDbId,
     properties: {
       'Title': {
         'title': [
@@ -74,6 +76,9 @@ void main() async {
       },
       'Stage': {
         'select': {'name': 'New'}
+      },
+      'Issue Type': {
+        'select': {'name': 'Unknown'}
       },
       'GitHub Issue': {'url': issueUrl.isNotEmpty ? issueUrl : null},
       'Issue Number': {'number': issueNumber},
@@ -100,6 +105,6 @@ void main() async {
     ],
   );
 
-  print('Backlog entry created successfully.');
+  print('Triage Queue entry created successfully.');
   client.dispose();
 }
