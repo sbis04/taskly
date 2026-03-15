@@ -197,6 +197,28 @@ class _TaskListScreenState extends State<TaskListScreen> {
             color: theme.colorScheme.error,
             child: Icon(Icons.delete_outline, color: theme.colorScheme.onError),
           ),
+          confirmDismiss: (direction) async {
+            return await showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text("Confirm Deletion"),
+                  content: Text("Are you sure you want to delete \"${task.title}\"?"),
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text("Cancel"),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      style: FilledButton.styleFrom(backgroundColor: theme.colorScheme.error),
+                      child: const Text("Delete"),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
           onDismissed: (_) => _deleteTask(index),
           child: ListTile(
             leading: Checkbox(
