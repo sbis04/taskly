@@ -54,6 +54,15 @@ class _TaskListScreenState extends State<TaskListScreen> {
     _controller.clear();
   }
 
+  void _editTask(int index, String newTitle) {
+    final trimmed = newTitle.trim();
+    if (trimmed.isEmpty) return; // Prevent saving empty task titles
+    setState(() {
+      _tasks[index].title = trimmed;
+    });
+    _controller.clear();
+  }
+
   void _toggleTask(int index) {
     setState(() => _tasks[index].isDone = !_tasks[index].isDone);
   }
@@ -74,7 +83,14 @@ class _TaskListScreenState extends State<TaskListScreen> {
       );
   }
 
-  void _showAddSheet() {
+  void _showAddEditSheet({int? index}) {
+    final isEditing = index != null;
+    if (isEditing) {
+      _controller.text = _tasks[index!].title; // Pre-fill for editing
+    } else {
+      _controller.clear(); // Clear for adding new task
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -92,12 +108,16 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 controller: _controller,
                 autofocus: true,
                 textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  hintText: 'What needs to be done?',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  hintText: isEditing ? 'Edit task' : 'What needs to be done?',
+                  border: const OutlineInputBorder(),
                 ),
                 onSubmitted: (value) {
-                  _addTask(value);
+                  if (isEditing) {
+                    _editTask(index!, value);
+                  } else {
+                    _addTask(value);
+                  }
                   Navigator.pop(ctx);
                 },
               ),
@@ -105,15 +125,21 @@ class _TaskListScreenState extends State<TaskListScreen> {
             const SizedBox(width: 12),
             FilledButton(
               onPressed: () {
-                _addTask(_controller.text);
+                if (isEditing) {
+                  _editTask(index!, _controller.text);
+                } else {
+                  _addTask(_controller.text);
+                }
                 Navigator.pop(ctx);
               },
-              child: const Text('Add'),
+              child: Text(isEditing ? 'Save' : 'Add'),
             ),
           ],
         ),
       ),
-    );
+    ).whenComplete(() {
+      _controller.clear(); // Ensure controller is cleared after sheet closes
+    });
   }
 
   @override
@@ -147,7 +173,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
       ),
       body: _tasks.isEmpty ? _buildEmpty(theme) : _buildList(theme),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddSheet,
+        onPressed: () => _showAddEditSheet(), // Call without index for adding
         child: const Icon(Icons.add),
       ),
     );
@@ -237,6 +263,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
             ),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+            onTap: () => _showAddEditSheet(index: index), // Add this to enable editing on tap
           ),
         );
       },
